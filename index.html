@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IC3 GS6 Adventure - Chinh Phục Tri Thức Số</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --secondary: #10B981;
+      --accent: #F59E0B;
+      --bg-game: #ECFDF5;
+    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #F3F4F6; color: #1F2937; }
+    
+    /* Login & UI Cards */
+    .card-custom { border-radius: 16px; border: none; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+    
+    /* Duolingo Treasure Map Style */
+    .map-container {
+      background: linear-gradient(180deg, #6EE7B7 0%, #3B82F6 100%);
+      border-radius: 24px; padding: 40px 20px; position: relative; min-height: 600px;
+    }
+    .map-node {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: #FFFFFF; border: 6px solid #F59E0B;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; font-weight: bold; color: #D97706;
+      cursor: pointer; position: relative; z-index: 2; transition: all 0.3s ease;
+      box-shadow: 0 8px 0 #B45309;
+    }
+    .map-node:hover { transform: scale(1.1); }
+    .map-node.active { background: #FEF08A; border-color: #10B981; box-shadow: 0 8px 0 #047857; color: #047857; }
+    .map-node.locked { background: #9CA3AF; border-color: #4B5563; box-shadow: 0 8px 0 #1F2937; color: #D1D5DB; cursor: not-allowed; }
+    
+    /* Hardware Builder Drag and Drop */
+    .motherboard-box {
+      background: #064E3B; border: 4px solid #059669; border-radius: 12px;
+      min-height: 400px; position: relative; padding: 20px;
+    }
+    .drop-zone {
+      border: 2px dashed #34D399; border-radius: 8px; min-height: 70px;
+      display: flex; align-items: center; justify-content: center; color: #A7F3D0;
+      margin-bottom: 12px; transition: background 0.2s;
+    }
+    .drop-zone.hover { background: rgba(52, 211, 153, 0.2); }
+    .component-card {
+      background: #FFFFFF; border: 2px solid #E5E7EB; border-radius: 8px;
+      padding: 10px; margin-bottom: 10px; cursor: grab; transition: transform 0.2s;
+    }
+    .component-card:active { cursor: grabbing; }
+
+    /* Quiz Radio Cards */
+    .quiz-opt {
+      border: 2px solid #E5E7EB; border-radius: 10px; padding: 12px 16px;
+      margin-bottom: 10px; cursor: pointer; transition: all 0.2s;
+    }
+    .quiz-opt:hover { border-color: var(--primary); background: #EEF2FF; }
+    .quiz-opt.selected { border-color: var(--primary); background: #C7D2FE; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div id="app" class="container py-4">
+
+  <!-- TOP BAR / NAVIGATION -->
+  <header id="top-bar" class="d-none d-flex justify-content-between align-items-center mb-4 p-3 bg-white card-custom">
+    <div class="d-flex align-items-center gap-3">
+      <i class="fa-solid fa-gamepad text-primary fs-3"></i>
+      <div>
+        <h5 class="m-0 font-weight-bold" id="user-display-name">Học Sinh</h5>
+        <small class="text-muted" id="user-display-class">Lớp: --</small>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <div class="badge bg-warning text-dark fs-6 px-3 py-2">
+        <i class="fa-solid fa-star me-1"></i> <span id="user-score">0</span> Điểm
+      </div>
+      <button class="btn btn-outline-danger btn-sm" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket me-1"></i> Đăng xuất
+      </button>
+    </div>
+  </header>
+
+  <!-- SCREEN 1: LOGIN -->
+  <section id="screen-login" class="row justify-content-center py-5">
+    <div class="col-md-5">
+      <div class="card card-custom p-4">
+        <div class="text-center mb-4">
+          <i class="fa-solid fa-compass-drafting text-primary display-4 mb-2"></i>
+          <h3 class="fw-bold">IC3 GS6 ADVENTURE</h3>
+          <p class="text-muted">Chinh phục kho báu kiến thức Tin học 6</p>
+        </div>
+        <form id="form-login" onsubmit="handleLogin(event)">
+          <div class="mb-3">
+            <label class="form-label font-weight-bold">Họ và Tên học sinh</label>
+            <input type="text" id="login-name" class="form-control" placeholder="Nhập đầy đủ họ tên..." required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label font-weight-bold">Tên Lớp (Điền tự do: 6A2, 6.2...)</label>
+            <input type="text" id="login-class" class="form-control" placeholder="Ví dụ: 6A2" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label font-weight-bold">Mật khẩu</label>
+            <input type="password" id="login-pass" class="form-control" placeholder="Mật khẩu của bạn..." required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">BẮT ĐẦU VƯỢT ẢI</button>
+        </form>
+        <div class="text-center mt-3">
+          <a href="#" onclick="showTeacherLogin()" class="text-decoration-none small text-muted">Dành cho Giáo viên</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: ADVENTURE MAP -->
+  <section id="screen-map" class="d-none">
+    <div class="text-center mb-4">
+      <h2 class="fw-bold text-dark">BẢN ĐỒ KHO BÁU IC3 GS6</h2>
+      <p class="text-muted">Hoàn thành các ải để mở khóa kiến thức và lưu thành tích</p>
+    </div>
+    
+    <div class="map-container d-flex flex-column align-items-center justify-content-around">
+      <div class="map-node active" onclick="startNode(1)">
+        <span>1</span>
+        <div class="position-absolute top-100 start-50 translate-middle-x mt-2 badge bg-dark">Lắp Ráp Linh Kiện</div>
+      </div>
+      <div class="map-node locked" id="node-2" onclick="startNode(2)">
+        <span>2</span>
+        <div class="position-absolute top-100 start-50 translate-middle-x mt-2 badge bg-dark">Kết Nối Mạng</div>
+      </div>
+      <div class="map-node locked" id="node-3" onclick="startNode(3)">
+        <span>3</span>
+        <div class="position-absolute top-100 start-50 translate-middle-x mt-2 badge bg-dark">Nhận Diện Thư Giả Mạo</div>
+      </div>
+      <div class="map-node locked" id="node-4" onclick="startNode(4)">
+        <span>4</span>
+        <div class="position-absolute top-100 start-50 translate-middle-x mt-2 badge bg-dark">Thử Thách Tổng Hợp</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: GAMEPLAY - MINIGAME 1: LẮP RÁP LINH KIỆN -->
+  <section id="game-node-1" class="d-none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <button class="btn btn-secondary" onclick="backToMap()"><i class="fa-solid fa-arrow-left"></i> Bản đồ</button>
+      <h4 class="fw-bold m-0">Ải 1: Lắp Ráp Máy Tính Nâng Cấp</h4>
+      <div></div>
+    </div>
+    
+    <div class="row">
+      <!-- Bên trái: Kho linh kiện (Không ghi tên sẵn, chỉ có chức năng) -->
+      <div class="col-md-5">
+        <div class="card card-custom p-3 mb-3">
+          <h5 class="fw-bold mb-3"><i class="fa-solid fa-box-open me-2"></i>Kho Linh Kiện (Kéo vào Bo mạch)</h5>
+          <div id="component-pool">
+            <!-- Dynamic Components Inserted Here -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bên phải: Bo mạch chủ thực tế -->
+      <div class="col-md-7">
+        <div class="motherboard-box">
+          <h5 class="text-white mb-3"><i class="fa-solid fa-microchip me-2"></i>Bo Mạch Chủ (Motherboard)</h5>
+          <div class="drop-zone" data-slot="cpu">Khe cắm CPU / Tản nhiệt (Bộ xử lý trung tâm)</div>
+          <div class="drop-zone" data-slot="ram">Khe RAM (Bộ nhớ truy cập ngẫu nhiên)</div>
+          <div class="drop-zone" data-slot="storage">Cổng SATA / NVMe (Lưu trữ HĐH, Dữ liệu)</div>
+          <div class="drop-zone" data-slot="psu">Cổng Nguồn PSU (Cấp điện toàn hệ thống)</div>
+        </div>
+        <button class="btn btn-success w-100 mt-3 py-2 fw-bold" onclick="checkHardwareGame()">XÁC NHẬN LẮP RÁP</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: GAMEPLAY - QUIZ CHALLENGE (ẢI 4 & TRẮC NGHIỆM) -->
+  <section id="game-quiz" class="d-none">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <button class="btn btn-secondary" onclick="backToMap()"><i class="fa-solid fa-arrow-left"></i> Bản đồ</button>
+      <h4 class="fw-bold m-0" id="quiz-title">Thử Thách Kiến Thức</h4>
+      <span class="badge bg-primary" id="quiz-progress">Câu 1/5</span>
+    </div>
+
+    <div class="card card-custom p-4">
+      <h5 class="fw-bold mb-4" id="quiz-question-text">Câu hỏi đang tải...</h5>
+      <div id="quiz-options-container">
+        <!-- Dynamic options -->
+      </div>
+      <div id="quiz-feedback" class="mt-3 alert d-none"></div>
+      <button class="btn btn-primary w-100 mt-3 fw-bold" id="quiz-next-btn" onclick="nextQuestion()">CÂU TIẾP THEO</button>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: TEACHER DASHBOARD -->
+  <section id="screen-teacher" class="d-none">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="fw-bold text-danger"><i class="fa-solid fa-user-shield me-2"></i>Trang Quản Trị Giáo Viên</h3>
+      <button class="btn btn-outline-dark" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Thoát</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card card-custom p-3 bg-primary text-white">
+          <h6>Tổng Học Sinh Đã Làm Bài</h6>
+          <h2 class="fw-bold" id="teacher-total-students">0</h2>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card card-custom p-3 bg-success text-white">
+          <h6>Điểm Trung Bình</h6>
+          <h2 class="fw-bold" id="teacher-avg-score">0</h2>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card card-custom p-3 bg-warning text-dark">
+          <h6>Tự Động Đánh Giá</h6>
+          <span class="badge bg-dark" id="teacher-auto-eval">Khá</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card card-custom p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0">Danh Sách Học Sinh &amp; Kết Quả</h5>
+        <div>
+          <button class="btn btn-danger btn-sm me-2" onclick="resetLeaderboard()"><i class="fa-solid fa-trash"></i> Xóa Bảng Xếp Hạng</button>
+          <button class="btn btn-success btn-sm" onclick="exportReport()"><i class="fa-solid fa-file-excel"></i> Xuất Báo Cáo</button>
+        </div>
+      </div>
+      
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Họ Tên</th>
+              <th>Lớp</th>
+              <th>Điểm</th>
+              <th>Ải Hoàn Thành</th>
+              <th>Đánh Giá Kỹ Năng</th>
+            </tr>
+          </thead>
+          <tbody id="teacher-student-table">
+            <!-- Dynamic student list -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// --- CONFIGURATION & STATE ---
+const APPS_SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEBAPP_URL"; // Thay URL Google Apps Script của bạn
+let currentUser = null;
+let currentQuizIndex = 0;
+let activeQuizQuestions = [];
+let hardwareState = {};
+
+// --- BANK CÂU HỎI IC3 GS6 (Đã xáo trộn & Cân bằng độ khó) ---
+const quizBank = [
+  {
+    id: 1,
+    question: "Tình huống: Em nhận được một Email thông báo 'Bạn đã trúng thưởng iPhone 16! Hãy bấm vào link bên dưới để nhận ngay'. Em nên làm gì?",
+    options: [
+      { text: "Bấm vào link ngay lập tức để không bỏ lỡ phần thưởng", correct: false },
+      { text: "Không bấm vào đường link và báo cáo Email lừa đảo/Xóa email", correct: true },
+      { text: "Gửi email lại hỏi cách nhận phần thưởng", correct: false },
+      { text: "Chia sẻ đường link cho bạn bè cùng nhận", correct: false }
+    ],
+    meaning: "Ý nghĩa thực tế: Giúp học sinh nhận diện hình thức Phishing (lừa đảo trực tuyến), bảo vệ thông tin cá nhân trên môi trường Internet."
+  },
+  {
+    id: 2,
+    question: "Mật khẩu nào dưới đây có độ bảo mật cao nhất cho tài khoản cá nhân?",
+    options: [
+      { text: "12345678", correct: false },
+      { text: "tenem123", correct: false },
+      { text: "HocSinh6A2@2026#", correct: true },
+      { text: "matkhau", correct: false }
+    ],
+    meaning: "Ý nghĩa thực tế: Mật khẩu mạnh phải dài hơn 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+  },
+  {
+    id: 3,
+    question: "Thiết bị nào sau đây đóng vai trò là 'Bộ não' xử lý mọi lệnh của máy tính?",
+    options: [
+      { text: "Ổ đĩa cứng HDD/SSD", correct: false },
+      { text: "Bộ vi xử lý CPU", correct: true },
+      { text: "Thanh bộ nhớ RAM", correct: false },
+      { text: "Bộ nguồn PSU", correct: false }
+    ],
+    meaning: "Ý nghĩa thực tế: Phân biệt các thành phần phần cứng và hiểu vai trò xử lý của CPU."
+  }
+];
+
+// --- AUTHENTICATION & ROUTING ---
+function handleLogin(e) {
+  e.preventDefault();
+  const name = document.getElementById('login-name').value.trim();
+  const studentClass = document.getElementById('login-class').value.trim();
+  const pass = document.getElementById('login-pass').value;
+
+  if(!name || !studentClass || !pass) return;
+
+  currentUser = { name, studentClass, score: 0, nodeCompleted: 0 };
+  localStorage.setItem('ic3_user', JSON.stringify(currentUser));
+
+  updateUI();
+  showScreen('screen-map');
+}
+
+function showTeacherLogin() {
+  const pass = prompt("Nhập mật khẩu Giáo Viên:");
+  if (pass === "Avs@2027#") {
+    showScreen('screen-teacher');
+    loadTeacherDashboard();
+  } else if (pass !== null) {
+    alert("Sai mật khẩu truy cập!");
+  }
+}
+
+function logout() {
+  localStorage.removeItem('ic3_user');
+  currentUser = null;
+  document.getElementById('top-bar').classList.add('d-none');
+  showScreen('screen-login');
+}
+
+function showScreen(screenId) {
+  ['screen-login', 'screen-map', 'game-node-1', 'game-quiz', 'screen-teacher'].forEach(id => {
+    document.getElementById(id).classList.add('d-none');
+  });
+  document.getElementById(screenId).classList.remove('d-none');
+}
+
+function updateUI() {
+  if (currentUser) {
+    document.getElementById('top-bar').classList.remove('d-none');
+    document.getElementById('user-display-name').innerText = currentUser.name;
+    document.getElementById('user-display-class').innerText = "Lớp: " + currentUser.studentClass;
+    document.getElementById('user-score').innerText = currentUser.score;
+  }
+}
+
+// --- MINIGAME 1: LẮP RÁP LINH KIỆN ---
+function initHardwareGame() {
+  const components = [
+    { id: 'cpu', icon: 'fa-microchip', desc: 'Xử lý dữ liệu toán học & hệ thống', correctSlot: 'cpu' },
+    { id: 'ram', icon: 'fa-memory', desc: 'Bộ nhớ truy xuất ngẫu nhiên tạm thời', correctSlot: 'ram' },
+    { id: 'storage', icon: 'fa-hard-drive', desc: 'Lưu trữ lâu dài Hệ điều hành & Tệp', correctSlot: 'storage' },
+    { id: 'psu', icon: 'fa-plug', desc: 'Biến đổi và cung cấp nguồn điện', correctSlot: 'psu' }
+  ];
+
+  // Xáo trộn linh kiện
+  components.sort(() => Math.random() - 0.5);
+
+  const pool = document.getElementById('component-pool');
+  pool.innerHTML = '';
+  components.forEach(comp => {
+    const card = document.createElement('div');
+    card.className = 'component-card';
+    card.draggable = true;
+    card.dataset.id = comp.id;
+    card.innerHTML = `
+      <div class="fw-bold"><i class="fa-solid ${comp.icon} me-2 text-primary"></i>Linh kiện ẩn tên</div>
+      <small class="text-muted d-block mt-1">Chức năng: ${comp.desc}</small>
+    `;
+    card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', comp.id));
+    pool.appendChild(card);
+  });
+
+  // Setup Dropzones
+  document.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('hover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('hover');
+      const compId = e.dataTransfer.getData('text/plain');
+      hardwareState[zone.dataset.slot] = compId;
+      zone.innerText = "Đã gắn 1 linh kiện vào khe!";
+      zone.style.background = "rgba(16, 185, 129, 0.4)";
+    });
+  });
+}
+
+function checkHardwareGame() {
+  let score = 100;
+  let errors = [];
+
+  if (hardwareState['cpu'] !== 'cpu') { score -= 25; errors.push("Thiếu hoặc lắp sai CPU/Tản nhiệt (Bộ não xử lý)!"); }
+  if (hardwareState['ram'] !== 'ram') { score -= 25; errors.push("Thiếu hoặc lắp sai RAM (Bộ nhớ ngắn hạn)!"); }
+  if (hardwareState['storage'] !== 'storage') { score -= 25; errors.push("Thiếu hoặc lắp sai Ô Đĩa Lưu Trữ!"); }
+  if (hardwareState['psu'] !== 'psu') { score -= 25; errors.push("Thiếu hoặc lắp sai Bộ Nguồn (PSU)!"); }
+
+  if (score === 100) {
+    alert(" Hoàn thành xuất sắc Ải 1! +100 Điểm");
+    currentUser.score += 100;
+    currentUser.nodeCompleted = Math.max(currentUser.nodeCompleted, 1);
+    saveProgress();
+    unlockNode(2);
+    backToMap();
+  } else {
+    alert(` Lắp ráp không hoàn chỉnh! Trừ điểm.\nChi tiết lỗi:\n- ${errors.join('\n- ')}`);
+  }
+}
+
+// --- QUIZ & SHUFFLE ENGINE ---
+function startNode(nodeId) {
+  if (nodeId === 1) {
+    showScreen('game-node-1');
+    initHardwareGame();
+  } else if (nodeId === 2 || nodeId === 3 || nodeId === 4) {
+    showScreen('game-quiz');
+    // Xáo trộn câu hỏi
+    activeQuizQuestions = JSON.parse(JSON.stringify(quizBank)).sort(() => Math.random() - 0.5);
+    currentQuizIndex = 0;
+    loadQuizQuestion();
+  }
+}
+
+function loadQuizQuestion() {
+  const q = activeQuizQuestions[currentQuizIndex];
+  document.getElementById('quiz-progress').innerText = `Câu ${currentQuizIndex + 1}/${activeQuizQuestions.length}`;
+  document.getElementById('quiz-question-text').innerText = q.question;
+
+  // Xáo trộn đáp án
+  const shuffledOpts = [...q.options].sort(() => Math.random() - 0.5);
+
+  const container = document.getElementById('quiz-options-container');
+  container.innerHTML = '';
+  shuffledOpts.forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-opt';
+    div.innerText = opt.text;
+    div.onclick = () => selectOption(div, opt, q.meaning);
+    container.appendChild(div);
+  });
+
+  document.getElementById('quiz-feedback').classList.add('d-none');
+}
+
+function selectOption(element, option, meaning) {
+  document.querySelectorAll('.quiz-opt').forEach(el => el.classList.remove('selected'));
+  element.classList.add('selected');
+
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.classList.remove('d-none', 'alert-success', 'alert-danger');
+
+  if (option.correct) {
+    feedback.classList.add('alert-success');
+    feedback.innerHTML = `<strong> Chính xác!</strong><br><small>${meaning}</small>`;
+    currentUser.score += 20;
+  } else {
+    feedback.classList.add('alert-danger');
+    feedback.innerHTML = `<strong> Chưa đúng!</strong><br><small>${meaning}</small>`;
+  }
+  updateUI();
+}
+
+function nextQuestion() {
+  currentQuizIndex++;
+  if (currentQuizIndex < activeQuizQuestions.length) {
+    loadQuizQuestion();
+  } else {
+    alert(" Chúc mừng bạn đã hoàn thành bài thử thách!");
+    saveProgress();
+    backToMap();
+  }
+}
+
+function unlockNode(nodeId) {
+  const node = document.getElementById(`node-${nodeId}`);
+  if(node) {
+    node.classList.remove('locked');
+    node.classList.add('active');
+  }
+}
+
+function backToMap() {
+  showScreen('screen-map');
+}
+
+function saveProgress() {
+  localStorage.setItem('ic3_user', JSON.stringify(currentUser));
+  // Gửi API đến Google Sheets nếu có cài đặt APPS_SCRIPT_URL
+}
+
+// --- TEACHER DASHBOARD LOGIC ---
+function loadTeacherDashboard() {
+  // Dữ liệu mẫu minh họa
+  const mockStudents = [
+    { name: "Nguyễn Văn An", studentClass: "6A2", score: 240, node: 4, eval: "Xuất sắc" },
+    { name: "Trần Thị Bích", studentClass: "6.2", score: 180, node: 2, eval: "Khá" }
+  ];
+
+  document.getElementById('teacher-total-students').innerText = mockStudents.length;
+  document.getElementById('teacher-avg-score').innerText = "210";
+
+  const tbody = document.getElementById('teacher-student-table');
+  tbody.innerHTML = '';
+  mockStudents.forEach(st => {
+    tbody.innerHTML += `
+      <tr>
+        <td class="fw-bold">${st.name}</td>
+        <td><span class="badge bg-secondary">${st.studentClass}</span></td>
+        <td class="text-success fw-bold">${st.score}</td>
+        <td>Ải ${st.node}</td>
+        <td><span class="badge bg-info text-dark">${st.eval}</span></td>
+      </tr>
+    `;
+  });
+}
+
+function resetLeaderboard() {
+  if (confirm("Bạn có chắc chắn muốn xóa toàn bộ bảng xếp hạng?")) {
+    alert("Đã làm sạch dữ liệu xếp hạng!");
+    loadTeacherDashboard();
+  }
+}
+
+function exportReport() {
+  alert("Đang xuất file báo cáo kết quả các câu hỏi quá khó và danh sách học sinh...");
+}
+
+// AUTO RESTORE SESSION
+window.onload = () => {
+  const saved = localStorage.getItem('ic3_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    updateUI();
+    showScreen('screen-map');
+  }
+};
+</script>
+</body>
+</html>
